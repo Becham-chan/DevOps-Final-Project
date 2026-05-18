@@ -11,8 +11,13 @@ const Dashboard = () => {
   const [attempts, setAttempts] = useState([]);
 
   useEffect(() => {
-    request('GET', '/api/enrollments/').then(setEnrollments).catch(() => {});
-    request('GET', '/api/attempts/').then(setAttempts).catch(() => {});
+    // DRF pagination returns { count, results: [...] } — unwrap .results
+    request('GET', '/api/enrollments/').then(data => {
+      setEnrollments(Array.isArray(data) ? data : (data.results ?? []));
+    }).catch(() => {});
+    request('GET', '/api/attempts/').then(data => {
+      setAttempts(Array.isArray(data) ? data : (data.results ?? []));
+    }).catch(() => {});
   }, []);
 
   const completed = enrollments.filter(e => e.is_completed).length;

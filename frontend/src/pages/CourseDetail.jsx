@@ -21,16 +21,19 @@ const CourseDetail = () => {
     }).catch(() => {});
 
     request('GET', '/api/enrollments/').then(data => {
-      const found = data.find(e => String(e.course) === String(id));
+      const list = Array.isArray(data) ? data : (data.results ?? []);
+      const found = list.find(e => String(e.course) === String(id));
       if (found) setEnrollment(found);
     }).catch(() => {});
 
     request('GET', '/api/lesson-progress/').then(data => {
-      setReadLessons(new Set(data.filter(p => p.is_read).map(p => p.lesson)));
+      const list = Array.isArray(data) ? data : (data.results ?? []);
+      setReadLessons(new Set(list.filter(p => p.is_read).map(p => p.lesson)));
     }).catch(() => {});
 
     request('GET', '/api/exams/').then(data => {
-      setExams(data.filter(e => String(e.course) === String(id)));
+      const list = Array.isArray(data) ? data : (data.results ?? []);
+      setExams(list.filter(e => String(e.course) === String(id)));
     }).catch(() => {});
   }, [id]);
 
@@ -42,7 +45,8 @@ const CourseDetail = () => {
     } catch (err) {
       if (err.response?.data?.detail?.includes('Already')) {
         request('GET', '/api/enrollments/').then(data => {
-          const found = data.find(e => String(e.course) === String(id));
+          const list = Array.isArray(data) ? data : (data.results ?? []);
+          const found = list.find(e => String(e.course) === String(id));
           if (found) setEnrollment(found);
         });
       }

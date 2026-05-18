@@ -24,7 +24,8 @@ const Home = () => {
       if (filters.level) params.append('level', filters.level);
       const url = `/api/courses/${params.toString() ? '?' + params.toString() : ''}`;
       const data = await request('GET', url);
-      setCourses(data);
+      // DRF pagination returns { count, results: [...] } or plain array
+      setCourses(Array.isArray(data) ? data : (data.results ?? []));
     } catch (err) { console.error(err); }
   };
 
