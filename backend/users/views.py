@@ -63,8 +63,8 @@ def register(request):
 @permission_classes([AllowAny])
 def login(request):
     """Login user and return a token."""
-    email = request.data.get('email')
-    password = request.data.get('password')
+    email = request.data.get('email', '').strip().lower()
+    password = request.data.get('password', '')
 
     if not email or not password:
         return Response(
@@ -72,21 +72,26 @@ def login(request):
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    # Find user by email
-    try:
-        user_obj = User.objects.get(email=email)
-        username = user_obj.username
-    except User.DoesNotExist:
+    # Use filter().first() to avoid MultipleObjectsReturned if duplicate emails exist
+    user_obj = User.objects.filter(email__iexact=email).first()
+
+    if not user_obj:
         return Response(
             {'detail': 'Invalid email or password'},
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    user = authenticate(username=username, password=password)
+    user = authenticate(username=user_obj.username, password=password)
 
     if not user:
         return Response(
             {'detail': 'Invalid email or password'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    if not user.is_active:
+        return Response(
+            {'detail': 'This account has been disabled'},
             status=status.HTTP_400_BAD_REQUEST
         )
 
