@@ -35,6 +35,11 @@ ENV PATH="/opt/venv/bin:$PATH" \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
 
+# Collect static files at build time — bakes them into the image.
+# Uses a dummy SECRET_KEY; collectstatic does NOT touch the database.
+RUN SECRET_KEY=build-time-collect-static-dummy \
+    python manage.py collectstatic --noinput --clear
+
 RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
 
 USER appuser
