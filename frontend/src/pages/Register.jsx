@@ -3,8 +3,27 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { GraduationCap, AlertCircle } from 'lucide-react';
 
+// Defined OUTSIDE Register so React doesn't unmount/remount on every keystroke
+const Field = ({ label, name, type = 'text', placeholder, required, value, onChange }) => (
+  <div>
+    <label className="block text-sm font-semibold text-gray-700 mb-1.5">{label}</label>
+    <input
+      id={name}
+      type={type}
+      name={name}
+      value={value}
+      onChange={onChange}
+      className="input-field"
+      placeholder={placeholder}
+      required={required}
+    />
+  </div>
+);
+
 const Register = () => {
-  const [form, setForm] = useState({ username: '', email: '', password: '', confirm: '', firstName: '', lastName: '' });
+  const [form, setForm] = useState({
+    username: '', email: '', password: '', confirm: '', firstName: '', lastName: ''
+  });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { register } = useAuth();
@@ -28,14 +47,6 @@ const Register = () => {
     }
   };
 
-  const Field = ({ label, name, type = 'text', placeholder, required }) => (
-    <div>
-      <label className="block text-sm font-semibold text-gray-700 mb-1.5">{label}</label>
-      <input id={name} type={type} name={name} value={form[name]} onChange={handle}
-        className="input-field" placeholder={placeholder} required={required} />
-    </div>
-  );
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-600 via-indigo-700 to-purple-800 flex items-center justify-center p-4">
       <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 sm:p-10">
@@ -55,16 +66,38 @@ const Register = () => {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
-            <Field label="First Name" name="firstName" placeholder="John" />
-            <Field label="Last Name" name="lastName" placeholder="Doe" />
+            <Field
+              label="First Name" name="firstName" placeholder="John"
+              value={form.firstName} onChange={handle}
+            />
+            <Field
+              label="Last Name" name="lastName" placeholder="Doe"
+              value={form.lastName} onChange={handle}
+            />
           </div>
-          <Field label="Username" name="username" placeholder="johndoe" required />
-          <Field label="Email" name="email" type="email" placeholder="you@example.com" required />
-          <Field label="Password" name="password" type="password" placeholder="••••••••" required />
-          <Field label="Confirm Password" name="confirm" type="password" placeholder="••••••••" required />
+          <Field
+            label="Username" name="username" placeholder="johndoe"
+            value={form.username} onChange={handle} required
+          />
+          <Field
+            label="Email" name="email" type="email" placeholder="you@example.com"
+            value={form.email} onChange={handle} required
+          />
+          <Field
+            label="Password" name="password" type="password" placeholder="••••••••"
+            value={form.password} onChange={handle} required
+          />
+          <Field
+            label="Confirm Password" name="confirm" type="password" placeholder="••••••••"
+            value={form.confirm} onChange={handle} required
+          />
 
-          <button type="submit" id="register-submit" disabled={loading}
-            className="btn-primary w-full py-3 text-base disabled:opacity-60 disabled:cursor-not-allowed mt-2">
+          <button
+            type="submit"
+            id="register-submit"
+            disabled={loading}
+            className="btn-primary w-full py-3 text-base disabled:opacity-60 disabled:cursor-not-allowed mt-2"
+          >
             {loading ? 'Creating account...' : 'Create Account'}
           </button>
         </form>
