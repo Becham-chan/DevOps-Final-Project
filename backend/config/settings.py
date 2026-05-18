@@ -111,7 +111,9 @@ STORAGES = {
         'BACKEND': 'django.core.files.storage.FileSystemStorage',
     },
     'staticfiles': {
-        'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+        # CompressedStaticFilesStorage: serves gzipped files but does NOT
+        # require a pre-built manifest — safe without running collectstatic first
+        'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage',
     },
 }
 
