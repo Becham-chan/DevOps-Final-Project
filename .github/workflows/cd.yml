@@ -9,6 +9,14 @@ jobs:
     name: Deploy to Render
     runs-on: ubuntu-latest
     environment: production
+    # Map secrets to env vars at job level — env context IS available in step if conditions
+    env:
+      DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
+      DOCKER_HUB_PASSWORD: ${{ secrets.DOCKER_HUB_PASSWORD }}
+      RENDER_BACKEND_DEPLOY_HOOK: ${{ secrets.RENDER_BACKEND_DEPLOY_HOOK }}
+      RENDER_FRONTEND_DEPLOY_HOOK: ${{ secrets.RENDER_FRONTEND_DEPLOY_HOOK }}
+      BACKEND_URL: ${{ secrets.BACKEND_URL }}
+      FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
 
     steps:
       - name: Checkout code
@@ -20,14 +28,14 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Login to Docker Hub
-        if: ${{ secrets.DOCKER_HUB_USERNAME != '' }}
+        if: ${{ env.DOCKER_HUB_USERNAME != '' }}
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_PASSWORD }}
 
       - name: Build and push backend image
-        if: ${{ secrets.DOCKER_HUB_USERNAME != '' }}
+        if: ${{ env.DOCKER_HUB_USERNAME != '' }}
         uses: docker/build-push-action@v5
         with:
           context: ./backend
@@ -39,7 +47,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Build and push frontend image
-        if: ${{ secrets.DOCKER_HUB_USERNAME != '' }}
+        if: ${{ env.DOCKER_HUB_USERNAME != '' }}
         uses: docker/build-push-action@v5
         with:
           context: ./frontend
@@ -53,31 +61,32 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Deploy Backend to Render
-        if: ${{ secrets.RENDER_BACKEND_DEPLOY_HOOK != '' }}
+        if: ${{ env.RENDER_BACKEND_DEPLOY_HOOK != '' }}
         run: |
           curl --fail --silent --show-error --request POST \
             --url "${{ secrets.RENDER_BACKEND_DEPLOY_HOOK }}" \
             --header 'content-type: application/json'
 
       - name: Deploy Frontend to Render
-        if: ${{ secrets.RENDER_FRONTEND_DEPLOY_HOOK != '' }}
+        if: ${{ env.RENDER_FRONTEND_DEPLOY_HOOK != '' }}
         run: |
           curl --fail --silent --show-error --request POST \
             --url "${{ secrets.RENDER_FRONTEND_DEPLOY_HOOK }}" \
             --header 'content-type: application/json'
 
       - name: Wait for deployment to settle
+        if: ${{ env.RENDER_BACKEND_DEPLOY_HOOK != '' || env.RENDER_FRONTEND_DEPLOY_HOOK != '' }}
         run: sleep 45
 
       - name: Smoke test backend
-        if: ${{ secrets.BACKEND_URL != '' }}
+        if: ${{ env.BACKEND_URL != '' }}
         run: |
           echo "Testing backend health..."
           curl --fail --silent "${{ secrets.BACKEND_URL }}/api/health/" || exit 1
           echo "Backend is healthy!"
 
       - name: Smoke test frontend
-        if: ${{ secrets.FRONTEND_URL != '' }}
+        if: ${{ env.FRONTEND_URL != '' }}
         run: |
           echo "Testing frontend..."
           curl --fail --silent "${{ secrets.FRONTEND_URL }}" > /dev/null || exit 1
