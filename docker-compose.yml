@@ -1,0 +1,76 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: course-db
+    environment:
+      POSTGRES_DB: ${DB_NAME:-course_db}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - course-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: course-backend
+    command: >
+      sh -c "python manage.py migrate &&
+             python create_superuser.py &&
+             python manage.py populate_mock_data &&
+             gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 4"
+    environment:
+      DEBUG: ${DEBUG:-False}
+      SECRET_KEY: ${SECRET_KEY:-django-insecure-change-in-production-xyz}
+      DATABASE_URL: postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/${DB_NAME:-course_db}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1,backend,0.0.0.0}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:3000}
+      CORS_ALLOW_ALL_ORIGINS: "True"
+      DJANGO_SUPERUSER_USERNAME: ${DJANGO_SUPERUSER_USERNAME:-admin}
+      DJANGO_SUPERUSER_EMAIL: ${DJANGO_SUPERUSER_EMAIL:-admin@example.com}
+      DJANGO_SUPERUSER_PASSWORD: ${DJANGO_SUPERUSER_PASSWORD:-admin123}
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+      - static_volume:/app/staticfiles
+    networks:
+      - course-network
+    restart: on-failure
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
+    container_name: course-frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    networks:
+      - course-network
+    restart: on-failure
+
+volumes:
+  postgres_data:
+  static_volume:
+
+networks:
+  course-network:
+    driver: bridge
