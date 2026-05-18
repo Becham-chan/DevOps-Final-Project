@@ -1,5 +1,6 @@
 """Basic tests for courses app."""
 import pytest
+import json
 from django.contrib.auth.models import User
 from rest_framework.test import APIClient
 from rest_framework.authtoken.models import Token
@@ -77,4 +78,5 @@ def test_double_enroll_rejected(auth_client, user, course):
 def test_health_check(api_client):
     response = api_client.get('/api/health/')
     assert response.status_code == 200
-    assert response.data['status'] == 'healthy'
+    data = json.loads(response.content)
+    assert data['status'] == 'healthy'
