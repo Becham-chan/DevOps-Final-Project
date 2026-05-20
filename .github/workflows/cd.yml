@@ -3,10 +3,9 @@ name: CD Pipeline - Deploy to Production
 on:
   push:
     branches: [main]
-
-  paths:
-    - "backend/**" # ทำงานเฉพาะเมื่อแก้ backend
-    - "frontend/**" # ทำงานเฉพาะเมื่อแก้ frontend
+    paths:
+      - "backend/**" # ทำงานเฉพาะเมื่อแก้ backend
+      - "frontend/**" # ทำงานเฉพาะเมื่อแก้ frontend
 
 jobs:
   deploy:
