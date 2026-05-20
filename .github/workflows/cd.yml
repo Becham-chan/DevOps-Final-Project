@@ -6,6 +6,8 @@ on:
     paths:
       - "backend/**" # ทำงานเฉพาะเมื่อแก้ backend
       - "frontend/**" # ทำงานเฉพาะเมื่อแก้ frontend
+      - ".github/workflows/ci.yml"
+      - ".github/workflows/cd.yml"
 
 jobs:
   deploy:
