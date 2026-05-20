@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [main, develop]
 
+  paths:
+    - "backend/**" # ทำงานเฉพาะเมื่อแก้ backend
+    - "frontend/**" # ทำงานเฉพาะเมื่อแก้ frontend
+
 jobs:
   backend-tests:
     name: Backend Tests & Lint
